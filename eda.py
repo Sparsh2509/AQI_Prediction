@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.ensemble import RandomForestRegressor
 
 plt.style.use("default")
 
@@ -95,4 +96,49 @@ sns.scatterplot(x=df["PM10"], y=df["AQI"], alpha=0.5)
 plt.title("PM10 vs AQI")
 plt.show()
 
-print("✔ FULL EDA Completed Successfully!")
+
+# 5. BOXPLOTS FOR OUTLIERS
+
+pollutants = ["PM2.5", "PM10", "NO2", "SO2", "AQI"]
+plt.figure(figsize=(10,5))
+sns.boxplot(data=df[pollutants])
+plt.title("Outliers in Pollutants")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+# STATION-WISE MONTHLY HEATMAP
+
+pivot = df.pivot_table(
+    values="AQI",
+    index="Station",
+    columns=df["Datetime"].dt.month,
+    aggfunc="mean"
+)
+
+plt.figure(figsize=(12,5))
+sns.heatmap(pivot, cmap="coolwarm", annot=True, fmt=".1f")
+plt.title("Monthly AQI by Station")
+plt.tight_layout()
+plt.show()
+
+
+# RANDOM FOREST FEATURE IMPORTANCE
+
+features = ["PM2.5","PM10","NO","NO2","NOx","NH3","CO",
+            "SO2","O3","Benzene","Toluene","Xylene"]
+available_features = [f for f in features if f in df.columns]
+
+X = df[available_features]
+y = df["AQI"]
+
+model = RandomForestRegressor(random_state=42).fit(X, y)
+importance = pd.Series(model.feature_importances_, index=available_features)
+
+plt.figure(figsize=(6,5))
+importance.sort_values().plot(kind='barh')
+plt.title("Pollutant Feature Importance")
+plt.tight_layout()
+plt.show()
+
+print("FULL EDA Completed Successfully!")
